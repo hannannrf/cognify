@@ -14,6 +14,7 @@ export default {
       : {};
     const reply = (status, body) => Response.json(body, { status, headers: cors });
 
+    if (new URL(req.url).pathname !== "/api/ai") return reply(404, { error: "Not found" });
     if (req.method === "OPTIONS") return new Response(null, { status: allowed ? 204 : 403, headers: cors });
     if (!allowed) return reply(403, { error: "Origin not allowed" });
     if (req.method !== "POST") return reply(405, { error: "Use POST" });

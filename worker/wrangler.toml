@@ -4,8 +4,13 @@ compatibility_date = "2025-06-01"
 
 [vars]
 # Sites allowed to call the proxy from a browser (exact origins, comma separated).
-ALLOWED_ORIGINS = "https://hannannrf.github.io,http://localhost:8001"
+ALLOWED_ORIGINS = "https://hannannrf.github.io,https://cognify.hannanrauf2004.workers.dev,http://localhost:8001"
 DAILY_LIMIT = "20"
+
+# The same Worker also hosts the app; only /api/* reaches the proxy code, everything else is a static file.
+[assets]
+directory = "../frontend"
+run_worker_first = ["/api/*"]
 
 [[durable_objects.bindings]]
 name = "QUOTA"

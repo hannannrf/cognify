@@ -9,7 +9,7 @@ const EMBED_MODEL = "Xenova/bge-small-en-v1.5";
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 export const KEY_STORAGE = "cognify-gemini-key";
 // Shared-key proxy from worker/ (daily cap per visitor). Empty = every visitor needs their own key.
-export const AI_PROXY = "https://cognify.hannanrauf2004.workers.dev";
+export const AI_PROXY = "https://cognify.hannanrauf2004.workers.dev/api/ai";
 const NOT_FOUND_ANSWER = "I could not find this in your uploaded material.";
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 const CHUNK_CHARS = 1000, OVERLAP_CHARS = 200;
