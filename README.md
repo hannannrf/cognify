@@ -1,5 +1,7 @@
 # Cognify
 
+**Live demo page:** https://hannannrf.github.io/cognify/
+
 Upload your lecture PDFs, ask questions, and get answers grounded in your own material, with page-level citations.
 
 **Built to cost $0:** free-tier Gemini API (or a fully local Ollama model), local embeddings, SQLite, no paid services.
