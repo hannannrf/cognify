@@ -1,5 +1,7 @@
+# Cloudflare Worker: hosts frontend/ and the AI proxy (worker/index.js). Cloudflare rebuilds it from this file on
+# every push to main (repo connected in the dashboard); `npx wrangler@4 deploy` from the repo root does the same.
 name = "cognify"
-main = "index.js"
+main = "worker/index.js"
 compatibility_date = "2025-06-01"
 
 [vars]
@@ -9,7 +11,7 @@ DAILY_LIMIT = "20"
 
 # The same Worker also hosts the app; only /api/* reaches the proxy code, everything else is a static file.
 [assets]
-directory = "../frontend"
+directory = "frontend"
 run_worker_first = ["/api/*"]
 
 [[durable_objects.bindings]]

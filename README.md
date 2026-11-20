@@ -50,19 +50,18 @@ Open http://localhost:8000 for the app, or http://localhost:8000/demo.html for t
 
 ## Shared AI key for the hosted app (optional, still $0)
 
-Without this, every visitor of the hosted app pastes their own free Gemini key. With it, AI works for everyone right away through a small Cloudflare Worker (`worker/`) that keeps your key secret and allows each visitor 20 requests a day (`DAILY_LIMIT` in `worker/wrangler.toml`). A visitor's own key still takes priority and has no cap.
+Without this, every visitor of the hosted app pastes their own free Gemini key. With it, AI works for everyone right away through a small Cloudflare Worker (`worker/`, config in `wrangler.toml`) that keeps your key secret and allows each visitor 20 requests a day (`DAILY_LIMIT` in `wrangler.toml`). A visitor's own key still takes priority and has no cap.
 
 1. Create a free Cloudflare account, and a Gemini key in a **separate Google project with billing never enabled**, so a leaked or drained key cannot cost money.
 2. Deploy the Worker, then store the key as a secret (it is prompted for, never written to a file):
 
    ```powershell
-   cd worker
    npx wrangler@4 login
    npx wrangler@4 deploy
    npx wrangler@4 secret put GEMINI_API_KEY
    ```
 
-3. Put the printed `https://cognify.<your-subdomain>.workers.dev` URL into `AI_PROXY` in `frontend/local.js` and push.
+3. Put `https://cognify.<your-subdomain>.workers.dev/api/ai` into `AI_PROXY` in `frontend/local.js` and push. The same Worker also serves the app at its root URL.
 
 Only origins listed in `ALLOWED_ORIGINS` get browser access. The Worker stores a day and a count per visitor, never the IP itself.
 
