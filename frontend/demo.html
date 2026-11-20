@@ -64,28 +64,6 @@
   .stack b { font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: block; }
   footer { padding: 72px 0 120px; color: var(--muted); font: 12px var(--mono); }
 
-  /* ---- agent build intro ---- */
-  #stage { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
-  .building .build { opacity: 0; }
-  .build { transition: opacity .5s ease; }
-  .wire { position: absolute; border: 1px solid var(--wire); background: rgba(61, 139, 255, .06); width: 0; height: 0;
-          transition: width .7s cubic-bezier(.2,.8,.2,1), height .7s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
-  .wire::before, .wire::after { content: ""; position: absolute; width: 6px; height: 6px; background: var(--text); border: 1px solid var(--wire); }
-  .wire::before { left: -4px; top: -4px; }
-  .wire::after { right: -4px; bottom: -4px; }
-  .wire span { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); background: var(--wire); color: #fff;
-               font: 700 10px var(--mono); padding: 2px 6px; white-space: nowrap; }
-  .cursor { position: absolute; left: 0; top: 0; transition: transform .6s cubic-bezier(.3,.7,.2,1), opacity .4s ease; }
-  .cursor svg { display: block; filter: drop-shadow(0 1px 2px #000); }
-  .cursor em { position: absolute; left: 14px; top: 14px; font: 700 10px var(--mono); font-style: normal; color: #000; padding: 1px 5px; white-space: nowrap; }
-
-  .hud { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: 14px;
-         background: rgba(18,18,18,.92); border: 1px solid var(--line); padding: 8px 10px 8px 14px; font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
-  .hud .dots { display: flex; }
-  .hud .dots i { width: 10px; height: 10px; border-radius: 50%; margin-left: -3px; border: 1px solid var(--bg); }
-  .hud button { font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; background: none; color: var(--text);
-                border: 1px solid var(--line); padding: 6px 10px; cursor: pointer; min-height: 32px; }
-  .hud button:hover { border-color: var(--accent); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   @media (max-width: 860px) {
@@ -94,31 +72,29 @@
     .pipeline { grid-template-columns: repeat(2, 1fr); }
     .stack { grid-template-columns: 1fr; }
     nav .links { display: none; }
-    .hud .count { display: none; }
   }
 </style>
 </head>
 <body>
-<div id="stage" aria-hidden="true"></div>
 
 <div class="wrap">
-  <nav class="build" data-label="nav · 1200×52">
+  <nav data-swarm="nav">
     <span>Cognify</span>
     <div class="links"><a href="#how">How it works</a><a href="#stack">Stack</a><a href="https://github.com/hannannrf/cognify">GitHub</a></div>
   </nav>
 
   <header class="hero">
-    <h1 class="giant build" data-label="hero.title">Cognify</h1>
+    <h1 class="giant" data-swarm="hero.title">Cognify</h1>
     <div>
-      <div class="build" data-label="tag"><span class="tag">Your notes. Cited.</span></div>
-      <p class="kicker build" data-label="kicker">RAG study assistant · built for $0</p>
-      <p class="lede build" data-label="lede">Upload lecture PDFs and ask questions. Every answer is grounded in <b>your own material</b> and points to the exact page it came from.</p>
-      <div class="ctas build" data-label="cta.row">
+      <div data-swarm="tag"><span class="tag">Your notes. Cited.</span></div>
+      <p class="kicker" data-swarm="kicker">RAG study assistant · built for $0</p>
+      <p class="lede" data-swarm="lede">Upload lecture PDFs and ask questions. Every answer is grounded in <b>your own material</b> and points to the exact page it came from.</p>
+      <div class="ctas" data-swarm="cta.row">
         <a class="btn primary" href="./">Open the app →</a>
         <a class="btn" href="#how">How it works</a>
       </div>
     </div>
-    <div class="chat build" data-label="chat.preview" aria-label="Example answer">
+    <div class="chat" data-swarm="chat.preview" aria-label="Example answer">
       <div class="q">Explain polymorphism using my lectures</div>
       <div class="a">Polymorphism lets one interface call different implementations, usually through virtual functions [1].
         <div class="src">[1] oop-lecture-03.pdf · page 2</div>
@@ -126,7 +102,7 @@
     </div>
   </header>
 
-  <div class="stats build" data-label="stats.strip">
+  <div class="stats" data-swarm="stats.strip">
     <div class="stat"><b>$0</b><span>to build and run</span></div>
     <div class="stat"><b>Page</b><span>level citations</span></div>
     <div class="stat"><b>Local</b><span>embeddings, no quota</span></div>
@@ -134,8 +110,8 @@
   </div>
 
   <section class="block" id="how">
-    <h2 class="build" data-label="h2">How it works</h2>
-    <div class="pipeline build" data-label="pipeline · 6 steps">
+    <h2 data-swarm="h2">How it works</h2>
+    <div class="pipeline" data-swarm="pipeline">
       <div class="step"><h3>Extract</h3><p>pypdf pulls text page by page, so page numbers survive.</p></div>
       <div class="step"><h3>Chunk</h3><p>1000-char windows, 200 overlap, never crossing a page.</p></div>
       <div class="step"><h3>Embed</h3><p>bge-small runs locally on CPU through ONNX.</p></div>
@@ -146,8 +122,8 @@
   </section>
 
   <section class="block" id="stack">
-    <h2 class="build" data-label="h2">Stack</h2>
-    <div class="stack build" data-label="stack.grid">
+    <h2 data-swarm="h2">Stack</h2>
+    <div class="stack" data-swarm="stack.grid">
       <div><b>API</b>FastAPI + SQLite</div>
       <div><b>Retrieval</b>fastembed + numpy</div>
       <div><b>LLM</b>Gemini free tier or local Ollama</div>
@@ -157,97 +133,13 @@
   <footer>AI answers can be wrong. Always check the cited pages.</footer>
 </div>
 
-<div class="hud" role="group" aria-label="Build animation controls">
-  <span class="dots" id="dots"></span>
-  <span><b id="agents">0</b> agents</span>
-  <span class="count"><b id="ops">0</b> ops</span>
-  <button id="replay">Replay</button>
-  <button id="skip">Skip</button>
-</div>
-
 <script>
-// Scripted intro: fake "agents" (cursors) draw a wireframe for each .build element, then reveal it.
-const AGENTS = [
+// Agents are named after Cognify's real pipeline parts (see /agentswarm skill).
+window.SWARM_AGENTS = [
   ["parser", "#ff6b5e"], ["chunker", "#ffb84d"], ["embedder", "#7ee07e"], ["retriever", "#5ec8ff"],
   ["tutor", "#c58bff"], ["quizzer", "#ff7ac6"], ["planner", "#f5f06a"], ["evaluator", "#8affd8"],
 ];
-const stage = document.getElementById("stage");
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-let timers = [], opsTimer;
-
-const later = (ms, fn) => timers.push(setTimeout(fn, ms));
-const pageRect = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }; };
-
-function makeCursor([name, color]) {
-  const c = document.createElement("div");
-  c.className = "cursor";
-  c.innerHTML = `<svg width="16" height="18" viewBox="0 0 16 18"><path d="M1 1l14 7-6 2-3 6z" fill="${color}"/></svg><em style="background:${color}">${name}</em>`;
-  stage.append(c);
-  return c;
-}
-const moveTo = (c, x, y) => (c.style.transform = `translate(${x}px, ${y}px)`);
-
-function stopTimers() { timers.forEach(clearTimeout); timers = []; clearInterval(opsTimer); }
-
-function finish() {
-  stopTimers();
-  document.body.classList.remove("building");
-  stage.querySelectorAll(".cursor, .wire").forEach((n) => (n.style.opacity = 0));
-  later(450, () => stage.replaceChildren());
-  document.getElementById("agents").textContent = 0;
-}
-
-function run() {
-  stopTimers();
-  stage.replaceChildren();
-  if (reduceMotion) return;
-  document.body.classList.add("building");
-  stage.style.height = document.documentElement.scrollHeight + "px";
-
-  const cursors = AGENTS.map(makeCursor);
-  document.getElementById("dots").innerHTML = AGENTS.map(([, c]) => `<i style="background:${c}"></i>`).join("");
-  document.getElementById("agents").textContent = AGENTS.length;
-  let ops = 0;
-  opsTimer = setInterval(() => (document.getElementById("ops").textContent = (ops += 7 + Math.floor(Math.random() * 30))), 80);
-
-  // Scatter agents first so they fly in from different places.
-  cursors.forEach((c) => moveTo(c, Math.random() * innerWidth, scrollY + Math.random() * innerHeight));
-
-  const targets = [...document.querySelectorAll(".build")];
-  targets.forEach((el, i) => {
-    const cursor = cursors[i % cursors.length];
-    const t = 400 + i * 260;
-    later(t, () => {
-      const r = pageRect(el);
-      moveTo(cursor, r.x, r.y);
-      later(600, () => {
-        const wire = document.createElement("div");
-        wire.className = "wire";
-        Object.assign(wire.style, { left: r.x + "px", top: r.y + "px" });
-        wire.innerHTML = `<span>${el.dataset.label} · ${Math.round(r.w)}×${Math.round(r.h)}</span>`;
-        stage.append(wire);
-        requestAnimationFrame(() => Object.assign(wire.style, { width: r.w + "px", height: r.h + "px" }));
-        moveTo(cursor, r.x + r.w, r.y + r.h); // drag to the opposite corner
-        later(750, () => { el.style.opacity = 1; });
-        later(1300, () => (wire.style.opacity = 0));
-      });
-    });
-  });
-  later(400 + targets.length * 260 + 2000, () => {
-    targets.forEach((el) => (el.style.opacity = ""));
-    finish();
-  });
-}
-
-document.getElementById("replay").onclick = () => {
-  document.querySelectorAll(".build").forEach((el) => (el.style.opacity = ""));
-  run();
-};
-document.getElementById("skip").onclick = () => {
-  document.querySelectorAll(".build").forEach((el) => (el.style.opacity = ""));
-  finish();
-};
-addEventListener("load", run);
 </script>
+<script src="agent-swarm.js" defer></script>
 </body>
 </html>
