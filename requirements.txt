@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+python-multipart
+pypdf
+fastembed
+numpy
+# dev
+pytest
+httpx

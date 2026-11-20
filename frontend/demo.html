@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Study Partner — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070707; --panel: #121212; --line: #262626; --text: #f2f2ee; --muted: #9a9a94;
+    --accent: #ff3b2f; --wire: #3d8bff; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, "Segoe UI", sans-serif; overflow-x: hidden; }
+  a { color: inherit; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font: 700 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  nav .links { display: flex; gap: 20px; }
+  nav a { text-decoration: none; color: var(--muted); }
+  nav a:hover { color: var(--text); }
+
+  .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 32px; align-items: end; padding: 24px 0 56px; }
+  .giant { grid-column: 1 / -1; font: 400 clamp(64px, 15vw, 210px)/.85 Anton, Impact, sans-serif; text-transform: uppercase;
+           color: transparent; -webkit-text-stroke: 2px var(--accent); margin: 0; letter-spacing: .01em; }
+  .tag { display: inline-block; background: var(--accent); color: #fff; font: 400 clamp(28px, 4vw, 44px)/1 Anton, Impact, sans-serif;
+         padding: 8px 14px 6px; text-transform: uppercase; }
+  .kicker { font: 700 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 18px 0 10px; }
+  .kicker::before { content: "● "; color: var(--accent); }
+  .lede { font-size: 18px; max-width: 520px; margin: 0 0 24px; }
+  .lede b { color: var(--accent); font-weight: 600; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { font: 700 13px var(--mono); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; padding: 14px 20px;
+         border: 1px solid var(--line); min-height: 44px; display: inline-flex; align-items: center; }
+  .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn:hover { border-color: var(--accent); }
+
+  .chat { background: var(--panel); border: 1px solid var(--line); padding: 18px; font-size: 14px; }
+  .chat .q { margin-left: auto; width: fit-content; background: var(--accent); color: #fff; padding: 8px 12px; margin-bottom: 12px; }
+  .chat .a { border: 1px solid var(--line); padding: 12px; }
+  .chat .src { margin-top: 10px; font: 12px var(--mono); color: var(--muted); border-left: 2px solid var(--wire); padding-left: 10px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .stat { padding: 22px 0; }
+  .stat b { display: block; font: 400 40px/1 Anton, Impact, sans-serif; color: var(--accent); }
+  .stat span { font: 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+
+  section.block { padding: 72px 0 0; }
+  h2 { font: 400 clamp(36px, 6vw, 64px)/1 Anton, Impact, sans-serif; text-transform: uppercase; margin: 0 0 24px; }
+  .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; counter-reset: step; }
+  .step { background: var(--panel); border: 1px solid var(--line); padding: 16px; min-height: 130px; }
+  .step::before { counter-increment: step; content: "0" counter(step); font: 700 12px var(--mono); color: var(--accent); }
+  .step h3 { font-size: 15px; margin: 8px 0 6px; }
+  .step p { font-size: 13px; color: var(--muted); margin: 0; }
+  .stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stack div { border: 1px solid var(--line); padding: 16px; }
+  .stack b { font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: block; }
+  footer { padding: 72px 0 120px; color: var(--muted); font: 12px var(--mono); }
+
+  /* ---- agent build intro ---- */
+  #stage { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+  .building .build { opacity: 0; }
+  .build { transition: opacity .5s ease; }
+  .wire { position: absolute; border: 1px solid var(--wire); background: rgba(61, 139, 255, .06); width: 0; height: 0;
+          transition: width .7s cubic-bezier(.2,.8,.2,1), height .7s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
+  .wire::before, .wire::after { content: ""; position: absolute; width: 6px; height: 6px; background: var(--text); border: 1px solid var(--wire); }
+  .wire::before { left: -4px; top: -4px; }
+  .wire::after { right: -4px; bottom: -4px; }
+  .wire span { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); background: var(--wire); color: #fff;
+               font: 700 10px var(--mono); padding: 2px 6px; white-space: nowrap; }
+  .cursor { position: absolute; left: 0; top: 0; transition: transform .6s cubic-bezier(.3,.7,.2,1), opacity .4s ease; }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px #000); }
+  .cursor em { position: absolute; left: 14px; top: 14px; font: 700 10px var(--mono); font-style: normal; color: #000; padding: 1px 5px; white-space: nowrap; }
+
+  .hud { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: 14px;
+         background: rgba(18,18,18,.92); border: 1px solid var(--line); padding: 8px 10px 8px 14px; font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
+  .hud .dots { display: flex; }
+  .hud .dots i { width: 10px; height: 10px; border-radius: 50%; margin-left: -3px; border: 1px solid var(--bg); }
+  .hud button { font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; background: none; color: var(--text);
+                border: 1px solid var(--line); padding: 6px 10px; cursor: pointer; min-height: 32px; }
+  .hud button:hover { border-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .pipeline { grid-template-columns: repeat(2, 1fr); }
+    .stack { grid-template-columns: 1fr; }
+    nav .links { display: none; }
+    .hud .count { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="stage" aria-hidden="true"></div>
+
+<div class="wrap">
+  <nav class="build" data-label="nav · 1200×52">
+    <span>AI Study Partner</span>
+    <div class="links"><a href="#how">How it works</a><a href="#stack">Stack</a><a href="/">Open app</a></div>
+  </nav>
+
+  <header class="hero">
+    <h1 class="giant build" data-label="hero.title">Study Partner</h1>
+    <div>
+      <div class="build" data-label="tag"><span class="tag">Your notes. Cited.</span></div>
+      <p class="kicker build" data-label="kicker">RAG study assistant · built for $0</p>
+      <p class="lede build" data-label="lede">Upload lecture PDFs and ask questions. Every answer is grounded in <b>your own material</b> and points to the exact page it came from.</p>
+      <div class="ctas build" data-label="cta.row">
+        <a class="btn primary" href="/">Open the app →</a>
+        <a class="btn" href="#how">How it works</a>
+      </div>
+    </div>
+    <div class="chat build" data-label="chat.preview" aria-label="Example answer">
+      <div class="q">Explain polymorphism using my lectures</div>
+      <div class="a">Polymorphism lets one interface call different implementations, usually through virtual functions [1].
+        <div class="src">[1] oop-lecture-03.pdf · page 2</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="stats build" data-label="stats.strip">
+    <div class="stat"><b>$0</b><span>to build and run</span></div>
+    <div class="stat"><b>Page</b><span>level citations</span></div>
+    <div class="stat"><b>Local</b><span>embeddings, no quota</span></div>
+    <div class="stat"><b>Strict</b><span>source mode</span></div>
+  </div>
+
+  <section class="block" id="how">
+    <h2 class="build" data-label="h2">How it works</h2>
+    <div class="pipeline build" data-label="pipeline · 6 steps">
+      <div class="step"><h3>Extract</h3><p>pypdf pulls text page by page, so page numbers survive.</p></div>
+      <div class="step"><h3>Chunk</h3><p>1000-char windows, 200 overlap, never crossing a page.</p></div>
+      <div class="step"><h3>Embed</h3><p>bge-small runs locally on CPU through ONNX.</p></div>
+      <div class="step"><h3>Retrieve</h3><p>Cosine search over the course's chunks, top 5.</p></div>
+      <div class="step"><h3>Ground</h3><p>Numbered sources go into a strict prompt.</p></div>
+      <div class="step"><h3>Answer</h3><p>The LLM replies with [n] citations you can check.</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="stack">
+    <h2 class="build" data-label="h2">Stack</h2>
+    <div class="stack build" data-label="stack.grid">
+      <div><b>API</b>FastAPI + SQLite</div>
+      <div><b>Retrieval</b>fastembed + numpy</div>
+      <div><b>LLM</b>Gemini free tier or local Ollama</div>
+    </div>
+  </section>
+
+  <footer>AI answers can be wrong. Always check the cited pages.</footer>
+</div>
+
+<div class="hud" role="group" aria-label="Build animation controls">
+  <span class="dots" id="dots"></span>
+  <span><b id="agents">0</b> agents</span>
+  <span class="count"><b id="ops">0</b> ops</span>
+  <button id="replay">Replay</button>
+  <button id="skip">Skip</button>
+</div>
+
+<script>
+// Scripted intro: fake "agents" (cursors) draw a wireframe for each .build element, then reveal it.
+const AGENTS = [
+  ["parser", "#ff6b5e"], ["chunker", "#ffb84d"], ["embedder", "#7ee07e"], ["retriever", "#5ec8ff"],
+  ["tutor", "#c58bff"], ["quizzer", "#ff7ac6"], ["planner", "#f5f06a"], ["evaluator", "#8affd8"],
+];
+const stage = document.getElementById("stage");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let timers = [], opsTimer;
+
+const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+const pageRect = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }; };
+
+function makeCursor([name, color]) {
+  const c = document.createElement("div");
+  c.className = "cursor";
+  c.innerHTML = `<svg width="16" height="18" viewBox="0 0 16 18"><path d="M1 1l14 7-6 2-3 6z" fill="${color}"/></svg><em style="background:${color}">${name}</em>`;
+  stage.append(c);
+  return c;
+}
+const moveTo = (c, x, y) => (c.style.transform = `translate(${x}px, ${y}px)`);
+
+function stopTimers() { timers.forEach(clearTimeout); timers = []; clearInterval(opsTimer); }
+
+function finish() {
+  stopTimers();
+  document.body.classList.remove("building");
+  stage.querySelectorAll(".cursor, .wire").forEach((n) => (n.style.opacity = 0));
+  later(450, () => stage.replaceChildren());
+  document.getElementById("agents").textContent = 0;
+}
+
+function run() {
+  stopTimers();
+  stage.replaceChildren();
+  if (reduceMotion) return;
+  document.body.classList.add("building");
+  stage.style.height = document.documentElement.scrollHeight + "px";
+
+  const cursors = AGENTS.map(makeCursor);
+  document.getElementById("dots").innerHTML = AGENTS.map(([, c]) => `<i style="background:${c}"></i>`).join("");
+  document.getElementById("agents").textContent = AGENTS.length;
+  let ops = 0;
+  opsTimer = setInterval(() => (document.getElementById("ops").textContent = (ops += 7 + Math.floor(Math.random() * 30))), 80);
+
+  // Scatter agents first so they fly in from different places.
+  cursors.forEach((c) => moveTo(c, Math.random() * innerWidth, scrollY + Math.random() * innerHeight));
+
+  const targets = [...document.querySelectorAll(".build")];
+  targets.forEach((el, i) => {
+    const cursor = cursors[i % cursors.length];
+    const t = 400 + i * 260;
+    later(t, () => {
+      const r = pageRect(el);
+      moveTo(cursor, r.x, r.y);
+      later(600, () => {
+        const wire = document.createElement("div");
+        wire.className = "wire";
+        Object.assign(wire.style, { left: r.x + "px", top: r.y + "px" });
+        wire.innerHTML = `<span>${el.dataset.label} · ${Math.round(r.w)}×${Math.round(r.h)}</span>`;
+        stage.append(wire);
+        requestAnimationFrame(() => Object.assign(wire.style, { width: r.w + "px", height: r.h + "px" }));
+        moveTo(cursor, r.x + r.w, r.y + r.h); // drag to the opposite corner
+        later(750, () => { el.style.opacity = 1; });
+        later(1300, () => (wire.style.opacity = 0));
+      });
+    });
+  });
+  later(400 + targets.length * 260 + 2000, () => {
+    targets.forEach((el) => (el.style.opacity = ""));
+    finish();
+  });
+}
+
+document.getElementById("replay").onclick = () => {
+  document.querySelectorAll(".build").forEach((el) => (el.style.opacity = ""));
+  run();
+};
+document.getElementById("skip").onclick = () => {
+  document.querySelectorAll(".build").forEach((el) => (el.style.opacity = ""));
+  finish();
+};
+addEventListener("load", run);
+</script>
+</body>
+</html>
