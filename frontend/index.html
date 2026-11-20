@@ -4,154 +4,315 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cognify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f7f7f5; --panel: #ffffff; --text: #1c1c1a; --muted: #5f5f5a; --border: #e2e2dc;
-    --accent: #2f5bd3; --accent-text: #ffffff; --error: #b42318; --ok: #1a7f37; --cite-bg: #eef2fd; --flame: #ea580c;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.5;
+    --bg: #f4f6fb; --panel: #ffffff; --panel-2: #f8fafc; --text: #0f172a; --muted: #475569; --border: #e2e8f0;
+    --primary: #0f766e; --primary-2: #0e7490; --on-primary: #ffffff; --soft: #f0fdfa;
+    --accent: #c2410c; --error: #b91c1c; --ok: #15803d; --flame: #ea580c; --cite-bg: #f0f9ff;
+    --sky: #0369a1; --violet: #6d28d9; --amber: #b45309; --emerald: #047857; --rose: #be123c;
+    --grad: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 50%, #8b5cf6 100%);
+    --grad-text: linear-gradient(135deg, #0f766e, #0369a1 50%, #6d28d9);
+    --shadow: 0 1px 2px rgb(15 23 42 / .05), 0 8px 24px rgb(15 23 42 / .06);
+    --sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M11 2l2.2 6.3 6.3 2.2-6.3 2.2L11 19l-2.2-6.3L2.5 10.5l6.3-2.2z'/%3E%3Cpath d='M19 14l.9 2.1 2.1.9-2.1.9L19 20l-.9-2.1L16 17l2.1-.9z'/%3E%3C/svg%3E");
+    --file: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6M8 13h8M8 17h5'/%3E%3C/svg%3E");
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.55;
+    color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #141413; --panel: #1d1d1b; --text: #ededea; --muted: #a3a39d; --border: #33332f;
-      --accent: #7c9cf5; --accent-text: #0d1430; --error: #f97066; --ok: #4ac26b; --cite-bg: #1f2740; --flame: #fb923c;
+      --bg: #0a0f1d; --panel: #111827; --panel-2: #0f172a; --text: #e5e7eb; --muted: #9ca3af; --border: #1f2a40;
+      --primary: #2dd4bf; --primary-2: #5eead4; --on-primary: #042f2e; --soft: rgb(45 212 191 / .1);
+      --accent: #fb923c; --error: #f87171; --ok: #4ade80; --flame: #fb923c; --cite-bg: rgb(56 189 248 / .08);
+      --sky: #38bdf8; --violet: #a78bfa; --amber: #fbbf24; --emerald: #34d399; --rose: #fb7185;
+      --grad-text: var(--grad);
+      --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
     }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); }
-  header { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between;
-           align-items: center; height: 53px; }
-  .streak { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; line-height: 1.2; padding: 4px 10px;
-            border-radius: 999px; background: var(--cite-bg); }
+  body { margin: 0; color: var(--text); min-height: 100vh; background:
+         radial-gradient(900px 500px at 105% -10%, rgb(20 184 166 / .14), transparent 60%),
+         radial-gradient(800px 500px at -10% 110%, rgb(139 92 246 / .12), transparent 60%), var(--bg);
+         background-attachment: fixed; }
+  .ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- header ---------- */
+  header { min-height: 64px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 36px; height: 36px; border-radius: 11px; background: var(--sparkle) center/20px no-repeat, var(--grad);
+          box-shadow: 0 6px 18px rgb(14 165 233 / .35); }
+  .word { font-weight: 800; font-size: 21px; letter-spacing: -.03em; background: var(--grad-text);
+          -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand small { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .head-right { display: flex; align-items: center; gap: 8px; }
+  .head-link { font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; padding: 8px 12px; border-radius: 999px; }
+  .head-link:hover { color: var(--text); background: var(--panel); }
+  .streak { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 600; line-height: 1.2; padding: 6px 12px;
+            border-radius: 999px; background: color-mix(in srgb, var(--flame) 12%, var(--panel));
+            border: 1px solid color-mix(in srgb, var(--flame) 30%, transparent); }
   .streak svg { width: 16px; height: 16px; fill: var(--flame); }
   .streak.at-risk svg { fill: var(--muted); }
   .streak.pop { animation: pop .45s ease-out; }
   @keyframes pop { 40% { transform: scale(1.18); } }
-  @media (prefers-reduced-motion: reduce) { .streak.pop { animation: none; } }
-  .review { max-width: 760px; margin-bottom: 28px; }
-  .review-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-  .review-head b { font-size: 18px; }
-  .review-head span { color: var(--muted); font-size: 14px; }
-  .review-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; min-height: 170px; font-size: 18px; }
-  .review-card .back { border-top: 1px dashed var(--border); margin-top: 16px; padding-top: 16px; }
-  .review-card small { display: block; color: var(--muted); font-size: 12px; margin-top: 10px; }
-  .review .primary { margin-top: 12px; }
-  .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
-  .rate button { font: inherit; padding: 8px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel);
-                 color: var(--text); cursor: pointer; min-height: 52px; transition: border-color .15s; }
-  .rate button:hover { border-color: var(--accent); }
-  .rate button small { display: block; color: var(--muted); font-size: 12px; }
-  .rate .again { border-bottom: 3px solid var(--error); }
-  .rate .good { border-bottom: 3px solid var(--ok); }
-  kbd { font: 12px ui-monospace, Consolas, monospace; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
-  .done { background: var(--cite-bg); border-radius: 12px; padding: 18px; }
-  main { display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 53px); }
-  aside { border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; background: var(--panel); }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 20px 0 8px; }
-  h2:first-child { margin-top: 0; }
+
+  /* ---------- layout ---------- */
+  main { display: grid; grid-template-columns: 300px 1fr; gap: 16px; padding: 0 16px 16px;
+         height: calc(100vh - 64px); height: calc(100dvh - 64px); }
+  aside, .chat { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  aside { padding: 18px; overflow-y: auto; }
+  .chat { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 24px 0 10px; }
+  aside > h2:first-of-type, .setup h2 { margin-top: 0; }
   ul { list-style: none; margin: 0; padding: 0; }
-  .course { width: 100%; text-align: left; background: none; border: 1px solid transparent; color: var(--text);
-            padding: 8px 10px; border-radius: 6px; cursor: pointer; font: inherit; min-height: 40px; }
-  .course:hover { background: var(--bg); }
-  .course[aria-current="true"] { border-color: var(--accent); background: var(--cite-bg); }
-  .doc { font-size: 14px; color: var(--muted); padding: 4px 0; }
-  form.row { display: flex; gap: 8px; }
-  input[type=text], textarea { flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--bg);
-           border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
-  button.primary { background: var(--accent); color: var(--accent-text); border: 0; border-radius: 6px;
-           padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; min-height: 40px; }
-  button:disabled { opacity: .5; cursor: progress; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .chat { display: flex; flex-direction: column; min-height: 0; }
-  #log { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .msg { max-width: 760px; white-space: pre-wrap; }
-  .q { align-self: flex-end; background: var(--accent); color: var(--accent-text); padding: 10px 14px; border-radius: 12px; }
-  .a { background: var(--panel); border: 1px solid var(--border); padding: 14px 16px; border-radius: 12px; }
-  .a.err { border-color: var(--error); color: var(--error); }
-  details { margin-top: 10px; font-size: 14px; white-space: normal; color: var(--text); }
-  summary { cursor: pointer; color: var(--muted); }
-  .src { background: var(--cite-bg); border-radius: 6px; padding: 8px 10px; margin-top: 6px; }
-  .src b { display: block; font-size: 13px; }
-  .composer { border-top: 1px solid var(--border); padding: 12px 20px; background: var(--panel); }
-  .composer label { font-size: 14px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; margin-top: 8px; }
   .status { font-size: 14px; color: var(--muted); min-height: 21px; margin-top: 6px; }
-  .empty { color: var(--muted); margin: auto; text-align: center; }
-  .tabs { display: flex; gap: 4px; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--panel); }
-  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: inherit; color: var(--muted);
-         cursor: pointer; min-height: 44px; }
-  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+  /* ---------- sidebar ---------- */
+  .setup { padding: 14px; margin-bottom: 22px; border-radius: 14px; background: color-mix(in srgb, var(--violet) 9%, var(--panel));
+           border: 1px solid color-mix(in srgb, var(--violet) 25%, var(--border)); }
+  .setup p { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .setup a { font-size: 13px; font-weight: 600; color: var(--violet); }
+  .course { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: none; border: 1px solid transparent;
+            color: var(--text); padding: 6px 8px; border-radius: 12px; cursor: pointer; font: inherit; font-weight: 500; min-height: 44px;
+            transition: background .15s, border-color .15s; }
+  .course:hover { background: var(--panel-2); }
+  .course[aria-current="true"] { background: var(--soft); border-color: color-mix(in srgb, var(--primary) 35%, transparent); font-weight: 700; }
+  .course > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+  .chip { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; color: #fff;
+          font-weight: 800; font-size: 14px; background: var(--c, #0f766e); }
+  .doc { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; padding: 5px 0; overflow-wrap: anywhere; }
+  .doc::before { content: ""; flex: none; width: 16px; height: 16px; margin-top: 3px; background: var(--accent);
+                 -webkit-mask: var(--file) center/contain no-repeat; mask: var(--file) center/contain no-repeat; }
+  .doc.none { color: var(--muted); }
+  .doc.none::before { display: none; }
+  form.row { display: flex; gap: 8px; margin-top: 10px; }
+  #upload-form { margin-top: 10px; padding: 12px; display: grid; gap: 10px; border-radius: 14px; background: var(--soft);
+                 border: 1.5px dashed color-mix(in srgb, var(--primary) 45%, var(--border)); }
+  input[type=file] { font: inherit; font-size: 13px; color: var(--muted); width: 100%; min-width: 0; }
+  input[type=file]::file-selector-button { font: inherit; font-weight: 600; margin-right: 10px; padding: 6px 12px; border-radius: 8px;
+                 border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; }
+
+  /* ---------- controls ---------- */
+  input[type=text], input[type=password], textarea, select {
+    font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; min-height: 42px; transition: border-color .15s, box-shadow .15s; }
+  input[type=text], input[type=password], textarea { flex: 1; min-width: 0; }
+  :is(input[type=text], input[type=password], textarea, select):focus-visible {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  button.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: var(--on-primary); padding: 9px 16px;
+    font: inherit; font-weight: 700; cursor: pointer; min-height: 42px;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 30%, transparent); transition: transform .15s, filter .15s; }
+  button.primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.07); }
+  button:disabled { opacity: .55; cursor: progress; }
+  kbd { font: 12px ui-monospace, Consolas, monospace; border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+        border-radius: 4px; padding: 0 4px; }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .tab { --hue: var(--primary); display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; border-radius: 10px;
+         padding: 8px 14px; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; min-height: 42px; white-space: nowrap;
+         transition: background .15s, color .15s; }
+  .tab[data-panel=panel-chat] { --hue: var(--sky); }
+  .tab[data-panel=panel-quiz] { --hue: var(--violet); }
+  .tab[data-panel=panel-cards] { --hue: var(--amber); }
+  .tab[data-panel=panel-progress] { --hue: var(--emerald); }
+  .tab .ic { color: var(--hue); }
+  .tab:hover { background: var(--panel-2); color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--text); background: color-mix(in srgb, var(--hue) 13%, transparent);
+                               box-shadow: inset 0 -2px 0 var(--hue); }
   .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .panel[hidden] { display: none; }
-  .pane { flex: 1; overflow-y: auto; padding: 20px; }
-  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; max-width: 760px; }
-  .toolbar label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+  .pane { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ---------- chat ---------- */
+  #log { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+  .msg { max-width: 760px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .q { align-self: flex-end; background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: var(--on-primary);
+       padding: 10px 16px; border-radius: 18px 18px 4px 18px; box-shadow: var(--shadow); }
+  .a { position: relative; margin-left: 44px; background: var(--panel-2); border: 1px solid var(--border); padding: 14px 18px;
+       border-radius: 4px 18px 18px 18px; }
+  .a::before { content: ""; position: absolute; left: -44px; top: 0; width: 32px; height: 32px; border-radius: 10px;
+               background: var(--sparkle) center/18px no-repeat, var(--grad); }
+  .a.err { border-color: var(--error); color: var(--error); background: color-mix(in srgb, var(--error) 6%, var(--panel)); }
+  details { margin-top: 10px; font-size: 14px; white-space: normal; color: var(--text); }
+  summary { cursor: pointer; color: var(--sky); font-weight: 600; }
+  .src { background: var(--cite-bg); border-left: 3px solid var(--sky); border-radius: 8px; padding: 8px 12px; margin-top: 8px; }
+  .src b { display: block; font-size: 13px; }
+  .empty { margin: auto; text-align: center; max-width: 520px; color: var(--muted); }
+  .empty .hero { width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 18px;
+                 background: var(--sparkle) center/30px no-repeat, var(--grad); box-shadow: 0 12px 30px rgb(14 165 233 / .3); }
+  .empty h3 { color: var(--text); font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+  .empty p { margin: 0 0 18px; }
+  .suggest { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .suggest button { font: inherit; font-size: 14px; font-weight: 500; color: var(--text); background: var(--panel);
+                    border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; cursor: pointer; min-height: 40px;
+                    transition: border-color .15s, transform .15s; }
+  .suggest button:hover { border-color: var(--primary); transform: translateY(-1px); }
+  .composer { border-top: 1px solid var(--border); padding: 14px 18px; }
+  .composer .row { display: flex; gap: 10px; align-items: flex-end; }
+  .composer textarea { resize: none; border-radius: 14px; }
+  .switch { font-size: 14px; color: var(--muted); display: inline-flex; gap: 8px; align-items: center; margin-top: 10px; cursor: pointer; }
+  .switch input { appearance: none; margin: 0; flex: none; width: 36px; height: 20px; border-radius: 999px; position: relative;
+                  cursor: pointer; background: color-mix(in srgb, var(--muted) 40%, transparent); transition: background .2s; }
+  .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+                         background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .3); transition: transform .2s; }
+  .switch input:checked { background: var(--primary); }
+  .switch input:checked::after { transform: translateX(16px); }
+
+  /* ---------- quiz ---------- */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 20px; max-width: 760px; padding: 16px;
+             background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; }
+  .toolbar label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
   .toolbar label.grow { flex: 1; min-width: 180px; }
-  select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; min-height: 40px; }
-  .qcard { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; max-width: 760px; }
-  .qcard fieldset { border: 0; padding: 0; margin: 0; }
-  .qcard legend { font-weight: 600; padding: 0; }
-  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; cursor: pointer; }
-  .opt.right { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); }
-  .opt.wrong { border-color: var(--error); box-shadow: inset 3px 0 0 var(--error); }
-  .why { font-size: 14px; margin-top: 10px; color: var(--muted); }
-  .score { font-size: 20px; font-weight: 600; margin: 0 0 14px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .card { text-align: left; min-height: 150px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-          padding: 14px; font: inherit; color: var(--text); cursor: pointer; display: flex; flex-direction: column; }
-  .card[aria-pressed="true"] { border-color: var(--accent); background: var(--cite-bg); }
-  .stats { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 16px; }
-  .stats b { display: block; font-size: 24px; }
-  .stats span { font-size: 13px; color: var(--muted); }
+  .qcard { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--violet); border-radius: 14px;
+           padding: 16px 18px; margin-bottom: 14px; max-width: 760px; box-shadow: var(--shadow); }
+  .qcard fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .qcard legend { font-weight: 700; padding: 0; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+         margin-top: 8px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .opt input { accent-color: var(--violet); margin-top: 5px; }
+  .opt:hover { border-color: color-mix(in srgb, var(--violet) 50%, var(--border)); }
+  .opt:has(input:checked) { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 8%, transparent); }
+  .qcard .opt.right { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, transparent); }
+  .qcard .opt.wrong { border-color: var(--error); background: color-mix(in srgb, var(--error) 8%, transparent); }
+  .why { font-size: 14px; margin: 12px 0 0; color: var(--muted); padding: 10px 12px; background: var(--panel-2); border-radius: 10px; }
+  .score { display: inline-block; font-size: 20px; font-weight: 800; margin: 0 0 16px; padding: 10px 18px; border-radius: 12px;
+           color: #fff; background: linear-gradient(135deg, #6d28d9, #0369a1); }
+
+  /* ---------- flashcards & review ---------- */
+  .review { max-width: 760px; margin-bottom: 28px; padding: 20px; border-radius: 18px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--amber) 12%, var(--panel)), color-mix(in srgb, var(--rose) 7%, var(--panel)));
+            border: 1px solid color-mix(in srgb, var(--amber) 30%, var(--border)); }
+  .review:empty { display: none; }
+  .review-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .review-head b { font-size: 18px; font-weight: 800; }
+  .review-head span { font-size: 13px; font-weight: 700; color: var(--amber); padding: 2px 10px; border-radius: 999px;
+                      background: color-mix(in srgb, var(--amber) 14%, var(--panel)); }
+  .review-head span:empty { display: none; }
+  .review-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; min-height: 170px;
+                 font-size: 19px; font-weight: 600; box-shadow: var(--shadow); }
+  .review-card .back { border-top: 1px dashed var(--border); margin-top: 16px; padding-top: 16px; font-weight: 500; }
+  .review-card small { display: block; color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .review .primary { margin-top: 14px; }
+  .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .rate button { --c: var(--ok); font: inherit; font-weight: 700; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--border);
+                 border-bottom: 3px solid var(--c); background: var(--panel); color: var(--text); cursor: pointer; min-height: 56px;
+                 transition: background .15s, border-color .15s; }
+  .rate .again { --c: var(--error); }
+  .rate .hard { --c: var(--amber); }
+  .rate .easy { --c: var(--sky); }
+  .rate button:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--panel)); }
+  .rate button small { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
+  .done { background: var(--panel); border-radius: 12px; padding: 18px; margin: 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .card { --c: var(--amber); text-align: left; min-height: 160px; background: var(--panel); border: 1px solid var(--border);
+          border-top: 4px solid var(--c); border-radius: 14px; padding: 16px; font: inherit; font-weight: 600; color: var(--text);
+          cursor: pointer; display: flex; flex-direction: column; box-shadow: var(--shadow); transition: transform .15s, background .15s; }
+  .card:nth-child(4n+2) { --c: var(--sky); }
+  .card:nth-child(4n+3) { --c: var(--violet); }
+  .card:nth-child(4n) { --c: var(--emerald); }
+  .card:hover { transform: translateY(-2px); }
+  .card[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 10%, var(--panel)); font-weight: 500; }
+  .card small { margin-top: auto; padding-top: 10px; color: var(--muted); font-size: 12px; font-weight: 500; }
+
+  /* ---------- progress ---------- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; max-width: 760px; }
+  .stats > div { --c: var(--sky); padding: 16px; border-radius: 14px; background: color-mix(in srgb, var(--c) 9%, var(--panel));
+                 border: 1px solid color-mix(in srgb, var(--c) 25%, var(--border)); }
+  .stats > div:nth-child(2) { --c: var(--emerald); }
+  .stats > div:nth-child(3) { --c: var(--accent); }
+  .stats b { display: block; font-size: 30px; font-weight: 800; line-height: 1.2; color: var(--c); }
+  .stats span { font-size: 13px; font-weight: 600; color: var(--muted); }
   .rec { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 760px;
-         background: var(--cite-bg); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; }
-  .topic { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr 70px; gap: 12px; align-items: center; max-width: 760px;
-           padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+         border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; font-weight: 500;
+         background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, var(--panel)), color-mix(in srgb, var(--violet) 9%, var(--panel)));
+         border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border)); }
+  .topic { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr 76px; gap: 12px; align-items: center; max-width: 760px;
+           padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; }
   .topic > span:first-child { min-width: 0; overflow-wrap: anywhere; }
-  .topic .weak { display: block; color: var(--error); font-size: 12px; font-weight: 600; }
-  .bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-  .bar span { display: block; height: 100%; background: var(--accent); }
-  .bar.low span { background: var(--error); }
-  .topic small { color: var(--muted); text-align: right; }
-  .history li { font-size: 14px; color: var(--muted); padding: 4px 0; }
-  .card small { margin-top: auto; padding-top: 10px; color: var(--muted); font-size: 12px; }
+  .topic .weak { display: block; width: fit-content; margin-top: 2px; font-size: 11px; font-weight: 800; color: var(--error);
+                 padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--error) 12%, transparent); }
+  .bar { height: 10px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--muted) 18%, transparent); }
+  .bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #14b8a6, #0ea5e9); }
+  .bar.low span { background: linear-gradient(90deg, #f97316, #ef4444); }
+  .topic small { color: var(--muted); text-align: right; font-weight: 500; }
+  .history li { font-size: 14px; color: var(--muted); padding: 6px 0; border-bottom: 1px dashed var(--border); }
+
   @media (max-width: 760px) {
-    main { grid-template-columns: 1fr; height: auto; }
-    aside { border-right: 0; border-bottom: 1px solid var(--border); }
-    .chat { height: 80vh; }
+    header { padding: 0 12px; }
+    .brand small, .head-link { display: none; }
+    main { grid-template-columns: 1fr; height: auto; padding: 0 10px 10px; gap: 10px; }
+    .chat { height: 80vh; height: 80dvh; }
+    #log, .pane { padding: 16px; }
+    .a { margin-left: 0; }
+    .a::before { display: none; }
+    .rate { grid-template-columns: repeat(2, 1fr); }
+    .topic { grid-template-columns: minmax(90px, 1fr) 1.3fr 70px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
 <body>
 <header>
-  <span>Cognify</span>
-  <span class="streak" id="streak" role="status" hidden>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.5-1.5 5-1.5 8 0 1.4 1 2.5 2.3 2.5 1.6 0 2.2-1.5 2-3.2C17.6 11.4 19 14 19 16a7 7 0 0 1-14 0c0-4.5 4.5-7.5 7-14z"/></svg>
-    <span id="streak-text"></span>
-  </span>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <span class="word">Cognify</span>
+    <small>Study smarter from your own notes</small>
+  </div>
+  <div class="head-right">
+    <a class="head-link" href="demo.html">About</a>
+    <span class="streak" id="streak" role="status" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.5-1.5 5-1.5 8 0 1.4 1 2.5 2.3 2.5 1.6 0 2.2-1.5 2-3.2C17.6 11.4 19 14 19 16a7 7 0 0 1-14 0c0-4.5 4.5-7.5 7-14z"/></svg>
+      <span id="streak-text"></span>
+    </span>
+  </div>
 </header>
 <main>
   <aside>
+    <section class="setup" id="local-setup" hidden>
+      <h2>AI key</h2>
+      <p>This copy runs fully in your browser: your notes stay on this device. Chat, quizzes and flashcards need a free Gemini key, sent only to Google.</p>
+      <form class="row" id="key-form">
+        <input type="password" id="gemini-key" placeholder="Paste your Gemini key" aria-label="Gemini API key" autocomplete="off">
+        <button class="primary">Save</button>
+      </form>
+      <div class="status" id="key-status" role="status"></div>
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key</a>
+    </section>
+
     <h2>Courses</h2>
     <ul id="courses"></ul>
-    <form class="row" id="course-form" style="margin-top:8px">
+    <form class="row" id="course-form">
       <input type="text" id="course-name" placeholder="e.g. OOP" aria-label="New course name" required maxlength="100">
       <button class="primary">Add</button>
     </form>
 
     <h2>Documents</h2>
-    <ul id="docs"><li class="doc">Select a course.</li></ul>
-    <form id="upload-form" style="margin-top:8px">
+    <ul id="docs"><li class="doc none">Select a course.</li></ul>
+    <form id="upload-form">
       <input type="file" id="file" accept="application/pdf,.pdf" aria-label="PDF to upload" required>
-      <button class="primary" style="margin-top:8px">Upload PDF</button>
+      <button class="primary">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload PDF
+      </button>
     </form>
     <div class="status" id="upload-status" role="status"></div>
   </aside>
 
   <section class="chat">
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" aria-controls="panel-chat" data-panel="panel-chat">Ask</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-quiz" data-panel="panel-quiz">Quiz</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-cards" data-panel="panel-cards">Flashcards</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-progress" data-panel="panel-progress">Progress</button>
+      <button class="tab" role="tab" aria-selected="true" aria-controls="panel-chat" data-panel="panel-chat">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Ask</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-quiz" data-panel="panel-quiz">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>Quiz</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-cards" data-panel="panel-cards">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>Flashcards</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-progress" data-panel="panel-progress">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M6 16v-5M11 16V6M16 16v-8"/></svg>Progress</button>
     </div>
 
     <div class="panel" id="panel-progress" role="tabpanel" hidden>
@@ -185,13 +346,26 @@
     </div>
 
     <div class="panel" id="panel-chat" role="tabpanel">
-    <div id="log" aria-live="polite"><p class="empty">Create a course, upload a lecture PDF, then ask a question.</p></div>
-    <form class="composer" id="chat-form">
-      <div class="row" style="display:flex;gap:8px">
-        <textarea id="question" rows="2" placeholder="Explain polymorphism using my lectures" aria-label="Question" required maxlength="2000"></textarea>
-        <button class="primary" id="ask">Ask</button>
+    <div id="log" aria-live="polite">
+      <div class="empty">
+        <div class="hero" aria-hidden="true"></div>
+        <h3>Ask anything about your notes</h3>
+        <p>Create a course, upload a lecture PDF, then ask. Every answer cites the page it came from.</p>
+        <div class="suggest">
+          <button type="button" data-q="Summarize the key ideas of my lectures">Summarize the key ideas</button>
+          <button type="button" data-q="Explain the hardest concept in my notes like I'm a beginner">Explain the hardest concept</button>
+          <button type="button" data-q="What should I memorize for the exam?">What to memorize for the exam</button>
+        </div>
       </div>
-      <label><input type="checkbox" id="strict" checked> Strict source mode (answer only from my material)</label>
+    </div>
+    <form class="composer" id="chat-form">
+      <div class="row">
+        <textarea id="question" rows="2" placeholder="Explain polymorphism using my lectures" aria-label="Question" required maxlength="2000"></textarea>
+        <button class="primary" id="ask">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Ask
+        </button>
+      </div>
+      <label class="switch"><input type="checkbox" id="strict" checked> Strict source mode (answer only from my material)</label>
     </form>
     </div>
   </section>
@@ -200,9 +374,10 @@
 <script>
 const $ = (id) => document.getElementById(id);
 let courseId = null;
+let local = null; // in-browser backend (local.js) when no server answers, e.g. on GitHub Pages
 
 async function api(path, options = {}) {
-  const res = await fetch(path, options);
+  const res = await (local ? local.handle(path, options) : fetch(path, options));
   const body = await res.json().catch(() => ({}));
   if (!res.ok && !body.sources) throw new Error(body.detail?.[0]?.msg || body.detail || `HTTP ${res.status}`);
   return body;
@@ -215,11 +390,15 @@ function el(tag, cls, text) {
   return node;
 }
 
+const HUES = ["#0f766e", "#6d28d9", "#0369a1", "#c2410c", "#be185d", "#3f6212"]; // all pass 4.5:1 with white text
 async function loadCourses() {
   const list = $("courses");
   list.replaceChildren();
   for (const c of await api("/api/courses")) {
-    const btn = el("button", "course", c.name);
+    const btn = el("button", "course");
+    const chip = el("span", "chip", [...c.name][0]?.toUpperCase());
+    chip.style.setProperty("--c", HUES[c.id % HUES.length]);
+    btn.append(chip, el("span", null, c.name));
     btn.setAttribute("aria-current", String(c.id === courseId));
     btn.onclick = () => selectCourse(c.id);
     const li = el("li"); li.append(btn); list.append(li);
@@ -232,7 +411,7 @@ async function selectCourse(id) {
   const docs = await api(`/api/courses/${id}/documents`);
   $("docs").replaceChildren(...(docs.length
     ? docs.map((d) => el("li", "doc", `${d.filename} · ${d.page_count} pages`))
-    : [el("li", "doc", "No documents yet.")]));
+    : [el("li", "doc none", "No documents yet.")]));
   $("quiz").replaceChildren(el("p", "status", "Generate a quiz from this course's documents."));
   renderCards(await api(`/api/courses/${id}/flashcards`));
   loadReview();
@@ -442,7 +621,7 @@ function renderReview(focus = false) {
     parts.push(rate);
   }
   box.replaceChildren(...parts);
-  if (focus) (box.querySelector(".rate .good") || box.querySelector("button"))?.focus({ preventScroll: true }); // Enter = Good, never an accidental Again // keep keyboard flow, never steal focus on load
+  if (focus) (box.querySelector(".rate .good") || box.querySelector("button"))?.focus({ preventScroll: true }); // Enter = Good, never an accidental Again; never steal focus on load
 }
 
 async function rateCard(rating) {
@@ -552,9 +731,27 @@ $("chat-form").onsubmit = async (e) => {
 $("question").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chat-form").requestSubmit(); }
 });
+document.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => { $("question").value = b.dataset.q; $("question").focus(); }));
 
-loadCourses();
-loadStreak();
+$("key-form").onsubmit = (e) => {
+  e.preventDefault();
+  const key = $("gemini-key").value.trim();
+  if (!key) return;
+  try { localStorage.setItem(local.KEY_STORAGE, key); } catch { return ($("key-status").textContent = "This browser blocks storage."); }
+  $("gemini-key").value = ""; $("gemini-key").placeholder = "Key saved on this device";
+  $("key-status").textContent = "Saved. Ask away.";
+};
+
+(async () => {
+  const probe = await fetch("/api/streak").catch(() => null);
+  if (!probe?.ok) { // no server: static hosting, so run the backend in this tab
+    local = await import("./local.js");
+    $("local-setup").hidden = false;
+    if (local.hasKey()) $("gemini-key").placeholder = "Key saved on this device";
+  }
+  loadCourses();
+  loadStreak();
+})();
 </script>
 </body>
 </html>

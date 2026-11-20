@@ -1,6 +1,8 @@
 # Cognify
 
-**Live demo page:** https://hannannrf.github.io/cognify/
+**Use it now:** https://hannannrf.github.io/cognify/ (runs fully in your browser; paste a free Gemini key in the sidebar)
+
+**Project showcase:** https://hannannrf.github.io/cognify/demo.html
 
 Upload your lecture PDFs, ask questions, and get answers grounded in your own material, with page-level citations.
 
@@ -25,6 +27,9 @@ Question -> embedding -> cosine search over the course's chunks -> top 5 -> prom
 | Vector search | numpy brute-force cosine | One student's notes fit easily; swap for FAISS past ~100k chunks |
 | LLM | Gemini free tier, or Ollama | Both $0; swap with `LLM_PROVIDER` |
 | Frontend | One HTML file | No build step |
+| Hosted copy | `frontend/local.js` on GitHub Pages | Same API in the browser: IndexedDB, pdf.js, transformers.js, Gemini with your own key |
+
+**Two ways to run, same UI:** with the Python server, or as a static site. When `index.html` finds no server it loads `local.js`, which serves the same `/api` routes inside the tab. Your notes never leave your browser except the passages sent to Gemini with each question.
 
 ## Run it
 
@@ -50,6 +55,12 @@ Open http://localhost:8000 for the app, or http://localhost:8000/demo.html for t
 ```
 
 Covers chunking, PDF extraction, malformed uploads, the full upload-then-chat flow with real embeddings, and the LLM-outage path.
+
+The browser port's shared logic (chunking, scheduling, streaks, mastery, output validation) has its own check:
+
+```powershell
+node --test tests/local.test.mjs
+```
 
 ## Roadmap
 

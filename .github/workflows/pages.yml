@@ -1,10 +1,10 @@
-# Publishes the showcase page (frontend/demo.html) to GitHub Pages. The app itself runs locally.
-name: Deploy demo page
+# Publishes the app to GitHub Pages. With no server behind it, index.html loads local.js and runs fully in the browser.
+name: Deploy app to Pages
 
 on:
   push:
     branches: [main]
-    paths: [frontend/demo.html, .github/workflows/pages.yml]
+    paths: [frontend/**, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
-      - run: mkdir _site && cp frontend/demo.html _site/index.html
+      - run: mkdir _site && cp frontend/index.html frontend/local.js frontend/demo.html _site/
       - uses: actions/upload-pages-artifact@v5
       - id: deployment
         uses: actions/deploy-pages@v5
