@@ -15,8 +15,8 @@ from backend.app.services import assessment, documents, embeddings, llm, progres
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 NOT_FOUND_ANSWER = "I could not find this in your uploaded material."
 
-log = logging.getLogger("study")
-app = FastAPI(title="AI Study Partner")
+log = logging.getLogger("cognify")
+app = FastAPI(title="Cognify")
 
 
 def get_conn():

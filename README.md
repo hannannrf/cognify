@@ -1,4 +1,4 @@
-# AI Study Partner
+# Cognify
 
 Upload your lecture PDFs, ask questions, and get answers grounded in your own material, with page-level citations.
 

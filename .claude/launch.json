@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "study-app",
+      "name": "cognify",
       "runtimeExecutable": ".venv/Scripts/python.exe",
       "runtimeArgs": ["-m", "uvicorn", "backend.app.main:app", "--port", "8000", "--env-file", ".env"],
       "port": 8000
