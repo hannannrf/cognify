@@ -13,16 +13,26 @@ def _numbered(sources: list[dict]) -> str:
     return "\n\n".join(f"[{i}] {s['text']}" for i, s in enumerate(sources, 1))
 
 
-def quiz_prompt(sources: list[dict], difficulty: str, count: int) -> str:
+def quiz_prompt(sources: list[dict], difficulty: str, count: int, known_topics: list[str] = ()) -> str:
+    reuse = f" Reuse one of these existing topic names when it fits: {', '.join(known_topics)}." if known_topics else ""
     return (
         f"Write {count} multiple-choice questions for a university student at {difficulty} difficulty "
         f"({DIFFICULTY_HINTS[difficulty]}), using ONLY the numbered sources below.\n"
         "Return a JSON array. Each item has: question (string), options (array of exactly 4 strings), "
         "answer (index 0-3 of the correct option), explanation (1-2 sentences on why it is correct), "
-        "source (number of the source used).\n"
+        "source (number of the source used), topic (the concept tested, 1-3 words, e.g. \"Polymorphism\")."
+        f"{reuse}\n"
         "Make wrong options plausible. Never ask about file names or page numbers.\n\n"
         f"Sources:\n{_numbered(sources)}"
     )
+
+
+def normalize_topic(raw, known_topics: list[str], fallback: str) -> str:
+    """Collapse spacing, cap length, and reuse an existing spelling so 'polymorphism' and 'Polymorphism' merge."""
+    topic = " ".join(raw.split())[:40] if isinstance(raw, str) else ""
+    if not topic:
+        return fallback
+    return next((k for k in known_topics if k.lower() == topic.lower()), topic)
 
 
 def flashcard_prompt(sources: list[dict], count: int) -> str:
@@ -51,9 +61,9 @@ def _source(item: dict, sources: list[dict]):
     return sources[s - 1]["chunk_id"] if isinstance(s, int) and 1 <= s <= len(sources) else None
 
 
-def parse_questions(raw: str, sources: list[dict]) -> list[dict]:
+def parse_questions(raw: str, sources: list[dict], known_topics: list[str] = (), fallback_topic: str = "General") -> list[dict]:
     """Keep only well-formed questions; the model's output is untrusted input."""
-    out = []
+    out, known = [], list(known_topics)
     for q in _items(raw):
         if not isinstance(q, dict):
             continue
@@ -72,7 +82,10 @@ def parse_questions(raw: str, sources: list[dict]) -> list[dict]:
                 "answer_index": ans,
                 "explanation": str(q.get("explanation") or "").strip(),
                 "chunk_id": _source(q, sources),
+                "topic": normalize_topic(q.get("topic"), known, fallback_topic),
             })
+            if out[-1]["topic"] not in known:
+                known.append(out[-1]["topic"])  # later questions in the same batch merge into it too
     return out
 
 

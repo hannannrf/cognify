@@ -57,7 +57,19 @@ CREATE TABLE IF NOT EXISTS flashcards (
     chunk_id INTEGER REFERENCES chunks(id) ON DELETE SET NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS responses (
+    id INTEGER PRIMARY KEY,
+    attempt_id INTEGER NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    chosen INTEGER,
+    correct INTEGER NOT NULL
+);
 """
+
+# Column changes to existing tables. Append only; PRAGMA user_version records how many have run.
+MIGRATIONS = [
+    "ALTER TABLE questions ADD COLUMN topic TEXT",
+]
 
 
 def connect() -> sqlite3.Connection:
@@ -67,4 +79,10 @@ def connect() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
+    version = conn.execute("PRAGMA user_version").fetchone()[0]
+    for number, sql in enumerate(MIGRATIONS[version:], start=version + 1):
+        with conn:  # explicit BEGIN: SQLite DDL is transactional, so migration and version bump commit together
+            conn.execute("BEGIN")
+            conn.execute(sql)
+            conn.execute(f"PRAGMA user_version = {number}")
     return conn

@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from backend.app import db
-from backend.app.services import assessment, documents, embeddings, llm, retriever
+from backend.app.services import assessment, documents, embeddings, llm, progress, retriever
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 NOT_FOUND_ANSWER = "I could not find this in your uploaded material."
@@ -169,8 +169,12 @@ def generate_json(prompt: str) -> str:
 def generate_quiz(body: QuizIn, conn=Depends(get_conn)):
     require_course(conn, body.course_id)
     sources = pick_sources(conn, body.course_id, body.topic)
-    raw = generate_json(assessment.quiz_prompt(sources, body.difficulty, body.count))
-    questions = assessment.parse_questions(raw, sources)[: body.count]
+    known = [r[0] for r in conn.execute(
+        """SELECT DISTINCT x.topic FROM questions x JOIN quizzes z ON z.id = x.quiz_id
+           WHERE z.course_id = ? AND x.topic IS NOT NULL""", (body.course_id,))]
+    raw = generate_json(assessment.quiz_prompt(sources, body.difficulty, body.count, known))
+    fallback = " ".join(body.topic.split())[:40] or "General"
+    questions = assessment.parse_questions(raw, sources, known, fallback)[: body.count]
     if not questions:
         raise HTTPException(502, "The model returned no usable questions. Try again.")
     quiz_id = conn.execute(
@@ -178,8 +182,9 @@ def generate_quiz(body: QuizIn, conn=Depends(get_conn)):
         (body.course_id, body.topic.strip() or None, body.difficulty),
     ).lastrowid
     conn.executemany(
-        "INSERT INTO questions (quiz_id, position, prompt, options, answer_index, explanation, chunk_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [(quiz_id, i, q["prompt"], json.dumps(q["options"]), q["answer_index"], q["explanation"], q["chunk_id"])
+        """INSERT INTO questions (quiz_id, position, prompt, options, answer_index, explanation, chunk_id, topic)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        [(quiz_id, i, q["prompt"], json.dumps(q["options"]), q["answer_index"], q["explanation"], q["chunk_id"], q["topic"])
          for i, q in enumerate(questions)],
     )
     conn.commit()
@@ -190,7 +195,7 @@ def generate_quiz(body: QuizIn, conn=Depends(get_conn)):
 @app.post("/api/quizzes/{quiz_id}/submit")
 def submit_quiz(quiz_id: int, body: SubmitIn, conn=Depends(get_conn)):
     rows = conn.execute(
-        f"""SELECT x.answer_index, x.explanation, d.filename, c.page_number
+        f"""SELECT x.id, x.answer_index, x.explanation, x.topic, d.filename, c.page_number
             FROM questions x {SOURCE_JOIN} WHERE x.quiz_id = ? ORDER BY x.position""",
         (quiz_id,),
     ).fetchall()
@@ -203,17 +208,53 @@ def submit_quiz(quiz_id: int, body: SubmitIn, conn=Depends(get_conn)):
             "correct": chosen == r["answer_index"],
             "answer_index": r["answer_index"],
             "explanation": r["explanation"],
+            "topic": r["topic"],
             "source": {"filename": r["filename"], "page": r["page_number"]} if r["filename"] else None,
         }
         for chosen, r in zip(body.answers, rows)
     ]
     score = sum(r["correct"] for r in results)
-    conn.execute(
+    attempt_id = conn.execute(
         "INSERT INTO attempts (quiz_id, answers, score, total) VALUES (?, ?, ?, ?)",
         (quiz_id, json.dumps(body.answers), score, len(rows)),
+    ).lastrowid
+    conn.executemany(
+        "INSERT INTO responses (attempt_id, question_id, chosen, correct) VALUES (?, ?, ?, ?)",
+        [(attempt_id, r["id"], chosen, int(res["correct"])) for chosen, r, res in zip(body.answers, rows, results)],
     )
     conn.commit()
     return {"score": score, "total": len(rows), "results": results}
+
+
+@app.get("/api/courses/{course_id}/progress")
+def course_progress(course_id: int, conn=Depends(get_conn)):
+    require_course(conn, course_id)
+    topic_rows = conn.execute(
+        """SELECT COALESCE(x.topic, 'General') AS topic, COUNT(*) AS answered, SUM(r.correct) AS correct
+           FROM responses r
+           JOIN questions x ON x.id = r.question_id
+           JOIN quizzes z ON z.id = x.quiz_id
+           WHERE z.course_id = ?
+           GROUP BY COALESCE(x.topic, 'General')""",
+        (course_id,),
+    )
+    history = conn.execute(
+        """SELECT a.id, a.score, a.total, a.submitted_at, z.topic, z.difficulty
+           FROM attempts a JOIN quizzes z ON z.id = a.quiz_id
+           WHERE z.course_id = ? ORDER BY a.id DESC LIMIT 20""",
+        (course_id,),
+    )
+    totals = conn.execute(
+        """SELECT COUNT(*) AS n, SUM(a.score) AS score, SUM(a.total) AS total
+           FROM attempts a JOIN quizzes z ON z.id = a.quiz_id WHERE z.course_id = ?""",
+        (course_id,),
+    ).fetchone()
+    return {
+        **progress.summarize([dict(r) for r in topic_rows]),
+        "quizzes_taken": totals["n"],
+        "accuracy": round(totals["score"] / totals["total"], 2) if totals["total"] else None,
+        "history": [dict(r) for r in history],
+    }
 
 
 @app.get("/api/courses/{course_id}/flashcards")

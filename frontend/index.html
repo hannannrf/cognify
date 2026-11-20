@@ -73,6 +73,20 @@
   .card { text-align: left; min-height: 150px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
           padding: 14px; font: inherit; color: var(--text); cursor: pointer; display: flex; flex-direction: column; }
   .card[aria-pressed="true"] { border-color: var(--accent); background: var(--cite-bg); }
+  .stats { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 16px; }
+  .stats b { display: block; font-size: 24px; }
+  .stats span { font-size: 13px; color: var(--muted); }
+  .rec { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 760px;
+         background: var(--cite-bg); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; }
+  .topic { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr 70px; gap: 12px; align-items: center; max-width: 760px;
+           padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+  .topic > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .topic .weak { display: block; color: var(--error); font-size: 12px; font-weight: 600; }
+  .bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--accent); }
+  .bar.low span { background: var(--error); }
+  .topic small { color: var(--muted); text-align: right; }
+  .history li { font-size: 14px; color: var(--muted); padding: 4px 0; }
   .card small { margin-top: auto; padding-top: 10px; color: var(--muted); font-size: 12px; }
   @media (max-width: 760px) {
     main { grid-template-columns: 1fr; height: auto; }
@@ -106,6 +120,11 @@
       <button class="tab" role="tab" aria-selected="true" aria-controls="panel-chat" data-panel="panel-chat">Ask</button>
       <button class="tab" role="tab" aria-selected="false" aria-controls="panel-quiz" data-panel="panel-quiz">Quiz</button>
       <button class="tab" role="tab" aria-selected="false" aria-controls="panel-cards" data-panel="panel-cards">Flashcards</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-progress" data-panel="panel-progress">Progress</button>
+    </div>
+
+    <div class="panel" id="panel-progress" role="tabpanel" hidden>
+      <div class="pane" id="progress" aria-live="polite"><p class="status">Select a course.</p></div>
     </div>
 
     <div class="panel" id="panel-quiz" role="tabpanel" hidden>
@@ -183,15 +202,64 @@ async function selectCourse(id) {
     : [el("li", "doc", "No documents yet.")]));
   $("quiz").replaceChildren(el("p", "status", "Generate a quiz from this course's documents."));
   renderCards(await api(`/api/courses/${id}/flashcards`));
+  if (!$("panel-progress").hidden) loadProgress();
 }
 
 // ---------- tabs ----------
-document.querySelectorAll(".tab").forEach((tab) => (tab.onclick = () => {
+function showTab(panelId) {
   document.querySelectorAll(".tab").forEach((t) => {
-    t.setAttribute("aria-selected", String(t === tab));
-    $(t.dataset.panel).hidden = t !== tab;
+    t.setAttribute("aria-selected", String(t.dataset.panel === panelId));
+    $(t.dataset.panel).hidden = t.dataset.panel !== panelId;
   });
-}));
+  if (panelId === "panel-progress") loadProgress();
+}
+document.querySelectorAll(".tab").forEach((tab) => (tab.onclick = () => showTab(tab.dataset.panel)));
+
+// ---------- progress ----------
+async function loadProgress() {
+  if (!courseId) return;
+  const box = $("progress");
+  let p;
+  try { p = await api(`/api/courses/${courseId}/progress`); }
+  catch (err) { return box.replaceChildren(el("p", "status", `Could not load progress: ${err.message}`)); }
+
+  const stats = el("div", "stats");
+  for (const [value, label] of [
+    [p.quizzes_taken, "quizzes taken"],
+    [p.accuracy == null ? "–" : `${Math.round(p.accuracy * 100)}%`, "overall accuracy"],
+    [p.weak_topics.length, "weak topics"],
+  ]) { const s = el("div"); s.append(el("b", null, value), el("span", null, label)); stats.append(s); }
+
+  const rec = el("div", "rec");
+  rec.append(el("span", null, p.recommendation.text));
+  const go = el("button", "primary", "Practice now");
+  go.onclick = () => {
+    $("quiz-topic").value = p.recommendation.topic;
+    $("quiz-difficulty").value = p.recommendation.difficulty;
+    showTab("panel-quiz");
+    $("quiz-topic").focus();
+  };
+  rec.append(go);
+
+  const topics = el("div");
+  if (p.topics.length) topics.append(el("h2", null, "Topic mastery"));
+  for (const t of p.topics) {
+    const row = el("div", "topic");
+    const name = el("span", null, t.topic);
+    if (p.weak_topics.includes(t.topic)) name.append(el("span", "weak", "WEAK"));
+    const bar = el("div", t.mastery < 0.6 ? "bar low" : "bar");
+    const fill = el("span"); fill.style.width = `${Math.round(t.mastery * 100)}%`; bar.append(fill);
+    row.append(name, bar, el("small", null, `${Math.round(t.mastery * 100)}% · ${t.correct}/${t.answered}`));
+    topics.append(row);
+  }
+
+  const hist = el("ul", "history");
+  if (p.history.length) hist.append(el("h2", null, "Recent quizzes"));
+  for (const h of p.history) {
+    hist.append(el("li", null, `${h.submitted_at.slice(0, 16)} · ${h.topic || "whole course"} · ${h.difficulty} · ${h.score}/${h.total}`));
+  }
+  box.replaceChildren(stats, rec, topics, hist);
+}
 
 // ---------- quiz ----------
 $("quiz-form").onsubmit = async (e) => {
@@ -245,7 +313,8 @@ function renderQuiz(quiz) {
           else if (j === answers[i]) opt.classList.add("wrong");
         });
         const src = res.source ? ` (${res.source.filename}, page ${res.source.page})` : "";
-        card.append(el("p", "why", `${res.correct ? "Correct." : "Not quite."} ${res.explanation}${src}`));
+        const topic = res.topic ? ` [${res.topic}]` : "";
+        card.append(el("p", "why", `${res.correct ? "Correct." : "Not quite."}${topic} ${res.explanation}${src}`));
       });
       form.prepend(el("p", "score", `Score: ${r.score} / ${r.total}`));
       submit.remove();

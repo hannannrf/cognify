@@ -51,7 +51,8 @@ def test_quiz_hides_answers_then_scores_submission(client, monkeypatch):
 
     r = client.post(f"/api/quizzes/{quiz['id']}/submit", json={"answers": [0, None]}).json()
     assert (r["score"], r["total"]) == (1, 2)
-    assert r["results"][1] == {"correct": False, "answer_index": 0, "explanation": GOOD_Q["explanation"], "source": r["results"][1]["source"]}
+    assert r["results"][1] == {"correct": False, "answer_index": 0, "explanation": GOOD_Q["explanation"],
+                               "topic": "General", "source": r["results"][1]["source"]}
     assert r["results"][0]["source"]["filename"] == "oop.pdf"
     assert client.post(f"/api/quizzes/{quiz['id']}/submit", json={"answers": [0]}).status_code == 400
     assert client.post("/api/quizzes/999/submit", json={"answers": []}).status_code == 404
