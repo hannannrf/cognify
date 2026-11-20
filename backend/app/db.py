@@ -64,11 +64,23 @@ CREATE TABLE IF NOT EXISTS responses (
     chosen INTEGER,
     correct INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY,
+    flashcard_id INTEGER NOT NULL REFERENCES flashcards(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL,
+    -- shortcut: the server's local date; correct while the app runs on the student's own machine.
+    reviewed_on TEXT NOT NULL DEFAULT (date('now', 'localtime'))
+);
 """
 
 # Column changes to existing tables. Append only; PRAGMA user_version records how many have run.
 MIGRATIONS = [
     "ALTER TABLE questions ADD COLUMN topic TEXT",
+    # spaced-repetition state per flashcard; due_date NULL = new card, due now
+    "ALTER TABLE flashcards ADD COLUMN ease REAL NOT NULL DEFAULT 2.5",
+    "ALTER TABLE flashcards ADD COLUMN interval_days INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE flashcards ADD COLUMN reps INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE flashcards ADD COLUMN due_date TEXT",
 ]
 
 
@@ -79,10 +91,17 @@ def connect() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
-    version = conn.execute("PRAGMA user_version").fetchone()[0]
-    for number, sql in enumerate(MIGRATIONS[version:], start=version + 1):
-        with conn:  # explicit BEGIN: SQLite DDL is transactional, so migration and version bump commit together
-            conn.execute("BEGIN")
-            conn.execute(sql)
-            conn.execute(f"PRAGMA user_version = {number}")
+    if conn.execute("PRAGMA user_version").fetchone()[0] < len(MIGRATIONS):
+        migrate(conn)
     return conn
+
+
+def migrate(conn: sqlite3.Connection) -> None:
+    # BEGIN IMMEDIATE takes the write lock before reading the version, so two first requests arriving together
+    # cannot both apply the same ALTER. SQLite DDL is transactional: all pending migrations commit or none do.
+    with conn:
+        conn.execute("BEGIN IMMEDIATE")
+        version = conn.execute("PRAGMA user_version").fetchone()[0]
+        for sql in MIGRATIONS[version:]:
+            conn.execute(sql)
+        conn.execute(f"PRAGMA user_version = {len(MIGRATIONS)}")

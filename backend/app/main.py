@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -10,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from backend.app import db
-from backend.app.services import assessment, documents, embeddings, llm, progress, retriever
+from backend.app.services import assessment, documents, embeddings, llm, progress, retriever, review
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 NOT_FOUND_ANSWER = "I could not find this in your uploaded material."
@@ -281,6 +282,61 @@ def generate_flashcards(body: FlashcardsIn, conn=Depends(get_conn)):
     )
     conn.commit()
     return list_flashcards(body.course_id, conn)
+
+
+# ---------- spaced-repetition review and streak: plain math, no LLM calls ----------
+
+class RatingIn(BaseModel):
+    rating: int = Field(ge=0, le=3)  # 0 again, 1 hard, 2 good, 3 easy
+
+
+REVIEW_LIMIT = 50
+TODAY = "date('now', 'localtime')"
+
+
+def _with_preview(row) -> dict:
+    card = dict(row)
+    card["preview"] = review.preview(card.pop("ease"), card.pop("interval_days"), card.pop("reps"))
+    return card
+
+
+@app.get("/api/courses/{course_id}/review")
+def review_queue(course_id: int, conn=Depends(get_conn)):
+    """Cards due today (oldest first), then new cards."""
+    require_course(conn, course_id)
+    rows = conn.execute(
+        f"""SELECT x.id, x.front, x.back, x.ease, x.interval_days, x.reps, d.filename, c.page_number AS page
+            FROM flashcards x {SOURCE_JOIN}
+            WHERE x.course_id = ? AND (x.due_date IS NULL OR x.due_date <= {TODAY})
+            ORDER BY x.due_date IS NULL, x.due_date, x.id LIMIT ?""",
+        (course_id, REVIEW_LIMIT),
+    )
+    return {"cards": [_with_preview(r) for r in rows]}
+
+
+@app.post("/api/flashcards/{card_id}/review")
+def review_card(card_id: int, body: RatingIn, conn=Depends(get_conn)):
+    card = conn.execute("SELECT ease, interval_days, reps FROM flashcards WHERE id = ?", (card_id,)).fetchone()
+    if not card:
+        raise HTTPException(404, "Flashcard not found")
+    nxt = review.schedule(body.rating, card["ease"], card["interval_days"], card["reps"])
+    conn.execute(
+        "UPDATE flashcards SET ease = ?, interval_days = ?, reps = ?, due_date = date('now', 'localtime', ?) WHERE id = ?",
+        (nxt["ease"], nxt["interval_days"], nxt["reps"], f"+{nxt['interval_days']} days", card_id),
+    )
+    conn.execute("INSERT INTO reviews (flashcard_id, rating) VALUES (?, ?)", (card_id, body.rating))
+    conn.commit()
+    due = conn.execute("SELECT due_date FROM flashcards WHERE id = ?", (card_id,)).fetchone()[0]
+    return {"interval_days": nxt["interval_days"], "due_date": due, "preview": review.preview(**nxt)}
+
+
+@app.get("/api/streak")
+def get_streak(conn=Depends(get_conn)):
+    """A study day is any day with a flashcard review or a submitted quiz."""
+    days = {r[0] for r in conn.execute(
+        "SELECT reviewed_on FROM reviews UNION SELECT date(submitted_at, 'localtime') FROM attempts"
+    )}
+    return review.streak(days, date.today())
 
 
 app.mount("/", StaticFiles(directory=Path(__file__).parents[2] / "frontend", html=True), name="frontend")

@@ -56,7 +56,8 @@ Covers chunking, PDF extraction, malformed uploads, the full upload-then-chat fl
 - [x] Vertical slice: course, PDF upload, chunking, local embeddings, retrieval, grounded answer, citations
 - [x] Quizzes and flashcards: one LLM call per set in JSON mode, strict validation, stored; scoring is deterministic with explanations and page citations
 - [x] Topic mastery and weak-topic detection: topics tagged in the same quiz call, Laplace-smoothed accuracy per topic in SQL, deterministic "practice next" recommendation
-- [ ] Study planner and spaced repetition (deterministic, no LLM calls)
+- [x] Spaced repetition: daily review queue (SM-2 variant), Again/Hard/Good/Easy with keyboard shortcuts, study streak
+- [ ] Study planner (deterministic, no LLM calls)
 - [ ] Auth, per-user isolation, document deletion
 - [ ] Hybrid search with SQLite FTS5
 

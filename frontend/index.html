@@ -7,18 +7,43 @@
 <style>
   :root {
     --bg: #f7f7f5; --panel: #ffffff; --text: #1c1c1a; --muted: #5f5f5a; --border: #e2e2dc;
-    --accent: #2f5bd3; --accent-text: #ffffff; --error: #b42318; --ok: #1a7f37; --cite-bg: #eef2fd;
+    --accent: #2f5bd3; --accent-text: #ffffff; --error: #b42318; --ok: #1a7f37; --cite-bg: #eef2fd; --flame: #ea580c;
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.5;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #141413; --panel: #1d1d1b; --text: #ededea; --muted: #a3a39d; --border: #33332f;
-      --accent: #7c9cf5; --accent-text: #0d1430; --error: #f97066; --ok: #4ac26b; --cite-bg: #1f2740;
+      --accent: #7c9cf5; --accent-text: #0d1430; --error: #f97066; --ok: #4ac26b; --cite-bg: #1f2740; --flame: #fb923c;
     }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); }
-  header { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  header { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between;
+           align-items: center; height: 53px; }
+  .streak { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; line-height: 1.2; padding: 4px 10px;
+            border-radius: 999px; background: var(--cite-bg); }
+  .streak svg { width: 16px; height: 16px; fill: var(--flame); }
+  .streak.at-risk svg { fill: var(--muted); }
+  .streak.pop { animation: pop .45s ease-out; }
+  @keyframes pop { 40% { transform: scale(1.18); } }
+  @media (prefers-reduced-motion: reduce) { .streak.pop { animation: none; } }
+  .review { max-width: 760px; margin-bottom: 28px; }
+  .review-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .review-head b { font-size: 18px; }
+  .review-head span { color: var(--muted); font-size: 14px; }
+  .review-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; min-height: 170px; font-size: 18px; }
+  .review-card .back { border-top: 1px dashed var(--border); margin-top: 16px; padding-top: 16px; }
+  .review-card small { display: block; color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .review .primary { margin-top: 12px; }
+  .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .rate button { font: inherit; padding: 8px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel);
+                 color: var(--text); cursor: pointer; min-height: 52px; transition: border-color .15s; }
+  .rate button:hover { border-color: var(--accent); }
+  .rate button small { display: block; color: var(--muted); font-size: 12px; }
+  .rate .again { border-bottom: 3px solid var(--error); }
+  .rate .good { border-bottom: 3px solid var(--ok); }
+  kbd { font: 12px ui-monospace, Consolas, monospace; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+  .done { background: var(--cite-bg); border-radius: 12px; padding: 18px; }
   main { display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 53px); }
   aside { border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; background: var(--panel); }
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 20px 0 8px; }
@@ -96,7 +121,13 @@
 </style>
 </head>
 <body>
-<header>Cognify</header>
+<header>
+  <span>Cognify</span>
+  <span class="streak" id="streak" role="status" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.5-1.5 5-1.5 8 0 1.4 1 2.5 2.3 2.5 1.6 0 2.2-1.5 2-3.2C17.6 11.4 19 14 19 16a7 7 0 0 1-14 0c0-4.5 4.5-7.5 7-14z"/></svg>
+    <span id="streak-text"></span>
+  </span>
+</header>
 <main>
   <aside>
     <h2>Courses</h2>
@@ -141,6 +172,8 @@
 
     <div class="panel" id="panel-cards" role="tabpanel" hidden>
       <div class="pane">
+        <section class="review" id="review" aria-live="polite"></section>
+        <h2>All cards</h2>
         <form class="toolbar" id="cards-form">
           <label class="grow">Topic (blank = whole course)<input type="text" id="cards-topic" maxlength="200" placeholder="e.g. inheritance"></label>
           <label>Cards<select id="cards-count"><option>5</option><option selected>8</option><option>15</option></select></label>
@@ -202,6 +235,7 @@ async function selectCourse(id) {
     : [el("li", "doc", "No documents yet.")]));
   $("quiz").replaceChildren(el("p", "status", "Generate a quiz from this course's documents."));
   renderCards(await api(`/api/courses/${id}/flashcards`));
+  loadReview();
   if (!$("panel-progress").hidden) loadProgress();
 }
 
@@ -317,6 +351,7 @@ function renderQuiz(quiz) {
         card.append(el("p", "why", `${res.correct ? "Correct." : "Not quite."}${topic} ${res.explanation}${src}`));
       });
       form.prepend(el("p", "score", `Score: ${r.score} / ${r.total}`));
+      loadStreak();
       submit.remove();
     } catch (err) {
       submit.disabled = false;
@@ -353,10 +388,102 @@ $("cards-form").onsubmit = async (e) => {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ course_id: courseId, topic: $("cards-topic").value, count: Number($("cards-count").value) }),
     }));
+    loadReview();
   } catch (err) {
     $("cards-status").textContent = `Could not generate flashcards: ${err.message}`;
   } finally { btn.disabled = false; }
 };
+
+// ---------- spaced-repetition review ----------
+const RATINGS = [["Again", "again"], ["Hard", "hard"], ["Good", "good"], ["Easy", "easy"]];
+let queue = [], revealed = false, reviewedCount = 0;
+const gap = (d) => (d === 0 ? "today" : d < 30 ? `${d}d` : `${Math.round(d / 30)}mo`);
+
+async function loadReview() {
+  if (!courseId) return;
+  queue = (await api(`/api/courses/${courseId}/review`)).cards;
+  revealed = false; reviewedCount = 0;
+  renderReview();
+}
+
+function renderReview(focus = false) {
+  const box = $("review");
+  const head = el("div", "review-head");
+  head.append(el("b", null, "Today's review"), el("span", null, queue.length ? `${queue.length} due` : ""));
+  if (!queue.length) {
+    const msg = reviewedCount
+      ? `Done for today: ${reviewedCount} reviews. Cards come back right before you would forget them.`
+      : "Nothing due. Generate cards below, then review a few every day.";
+    return box.replaceChildren(head, el("p", "done", msg));
+  }
+  const card = queue[0];
+  const face = el("div", "review-card");
+  face.append(el("div", null, card.front));
+  if (revealed) {
+    const back = el("div", "back", card.back);
+    if (card.filename) back.append(el("small", null, `${card.filename}, page ${card.page}`));
+    face.append(back);
+  }
+  const parts = [head, face];
+  if (!revealed) {
+    const show = el("button", "primary", "Show answer ");
+    show.append(el("kbd", null, "Space"));
+    show.onclick = () => { revealed = true; renderReview(true); };
+    parts.push(show);
+  } else {
+    const rate = el("div", "rate");
+    RATINGS.forEach(([label, cls], i) => {
+      const b = el("button", cls, `${label} `);
+      b.append(el("kbd", null, String(i + 1)), el("small", null, gap(card.preview[i])));
+      b.setAttribute("aria-label", `${label}, next review ${gap(card.preview[i])}`);
+      b.onclick = () => rateCard(i);
+      rate.append(b);
+    });
+    parts.push(rate);
+  }
+  box.replaceChildren(...parts);
+  if (focus) (box.querySelector(".rate .good") || box.querySelector("button"))?.focus({ preventScroll: true }); // Enter = Good, never an accidental Again // keep keyboard flow, never steal focus on load
+}
+
+async function rateCard(rating) {
+  const card = queue.shift();
+  revealed = false;
+  try {
+    const r = await api(`/api/flashcards/${card.id}/review`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rating }),
+    });
+    reviewedCount++;
+    if (r.interval_days === 0) queue.push({ ...card, preview: r.preview }); // "Again": see it once more this session
+  } catch (err) {
+    queue.unshift(card);
+    alert(`Could not save review: ${err.message}`);
+  }
+  renderReview(true);
+  loadStreak();
+}
+
+document.addEventListener("keydown", (e) => {
+  if ($("panel-cards").hidden || !queue.length || e.target.closest("input, textarea, select")) return;
+  if (e.key === " " && !revealed) { e.preventDefault(); revealed = true; renderReview(true); }
+  else if (revealed && ["1", "2", "3", "4"].includes(e.key)) { e.preventDefault(); rateCard(Number(e.key) - 1); }
+});
+
+// ---------- streak ----------
+let lastStreak = null;
+async function loadStreak() {
+  const s = await api("/api/streak").catch(() => null);
+  if (!s) return;
+  const pill = $("streak");
+  pill.hidden = false;
+  pill.classList.toggle("at-risk", s.current > 0 && !s.studied_today);
+  $("streak-text").textContent = s.current
+    ? `${s.current}-day streak${s.studied_today ? "" : " · study today to keep it"}`
+    : "Start a streak today";
+  if (lastStreak !== null && s.current > lastStreak) {
+    pill.classList.remove("pop"); void pill.offsetWidth; pill.classList.add("pop");
+  }
+  lastStreak = s.current;
+}
 
 $("course-form").onsubmit = async (e) => {
   e.preventDefault();
@@ -427,6 +554,7 @@ $("question").addEventListener("keydown", (e) => {
 });
 
 loadCourses();
+loadStreak();
 </script>
 </body>
 </html>
