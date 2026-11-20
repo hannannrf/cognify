@@ -1,0 +1,16 @@
+name = "cognify"
+main = "index.js"
+compatibility_date = "2025-06-01"
+
+[vars]
+# Sites allowed to call the proxy from a browser (exact origins, comma separated).
+ALLOWED_ORIGINS = "https://hannannrf.github.io,http://localhost:8001"
+DAILY_LIMIT = "20"
+
+[[durable_objects.bindings]]
+name = "QUOTA"
+class_name = "Quota"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Quota"] # SQLite-backed Durable Objects are on the Workers free plan

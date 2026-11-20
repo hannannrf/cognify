@@ -8,6 +8,8 @@ const TRANSFORMERS = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0
 const EMBED_MODEL = "Xenova/bge-small-en-v1.5";
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 export const KEY_STORAGE = "cognify-gemini-key";
+// Shared-key proxy from worker/ (daily cap per visitor). Empty = every visitor needs their own key.
+export const AI_PROXY = "https://cognify.hannanrauf2004.workers.dev";
 const NOT_FOUND_ANSWER = "I could not find this in your uploaded material.";
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 const CHUNK_CHARS = 1000, OVERLAP_CHARS = 200;
@@ -162,24 +164,32 @@ const today = () => nowLocal().slice(0, 10);
 async function generate(prompt, jsonMode = false) {
   let key = "";
   try { key = (localStorage.getItem(KEY_STORAGE) || "").trim(); } catch {}
-  if (!key) throw new Error("Add your free Gemini key in the sidebar (AI key) first.");
+  if (!key && !AI_PROXY) throw new Error("Add your free Gemini key in the sidebar (AI key) first.");
   const body = { contents: [{ parts: [{ text: prompt }] }] };
   if (jsonMode) body.generationConfig = { responseMimeType: "application/json" };
+  // The visitor's own key wins (no cap); otherwise the shared proxy, whose 429 means "daily cap", so never retry it.
+  const call = () => key
+    ? fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify(body), signal: AbortSignal.timeout(30000) })
+    : fetch(AI_PROXY, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, json: jsonMode }), signal: AbortSignal.timeout(30000) });
+  const retryable = key ? [429, 500, 503] : [500, 503];
   for (let attempt = 0; ; attempt++) {
     let res;
-    try {
-      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
-        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-        body: JSON.stringify(body), signal: AbortSignal.timeout(30000),
-      });
-    } catch (e) {
+    try { res = await call(); } catch (e) {
       if (attempt < 2) { await sleep(2000 * 2 ** attempt); continue; }
-      throw new Error(`Could not reach Gemini: ${e.message}`);
+      throw new Error(`Could not reach the AI service: ${e.message}`);
     }
     // 429 = free-tier rate limit, 5xx = provider hiccup: back off and retry; anything else is final.
-    if ([429, 500, 503].includes(res.status) && attempt < 2) { await sleep(2000 * 2 ** attempt); continue; }
-    if (res.status === 429) throw new Error("Free-tier rate limit or daily quota reached. Try again later.");
+    if (retryable.includes(res.status) && attempt < 2) { await sleep(2000 * 2 ** attempt); continue; }
     const data = await res.json().catch(() => ({}));
+    if (!key) {
+      if (!res.ok) throw new Error(data.error ?? `AI proxy returned HTTP ${res.status}`);
+      return data.text;
+    }
+    if (res.status === 429) throw new Error("Free-tier rate limit or daily quota reached. Try again later.");
     if (!res.ok) throw new Error(`Gemini returned HTTP ${res.status}: ${data.error?.message ?? ""}`);
     const parts = data.candidates?.[0]?.content?.parts;
     if (!parts) throw new Error("Unexpected Gemini response (possibly blocked).");

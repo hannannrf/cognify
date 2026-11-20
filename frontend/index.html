@@ -276,7 +276,7 @@
   <aside>
     <section class="setup" id="local-setup" hidden>
       <h2>AI key</h2>
-      <p>This copy runs fully in your browser: your notes stay on this device. Chat, quizzes and flashcards need a free Gemini key, sent only to Google.</p>
+      <p id="key-help">This copy runs fully in your browser: your notes stay on this device. Chat, quizzes and flashcards need a free Gemini key, sent only to Google.</p>
       <form class="row" id="key-form">
         <input type="password" id="gemini-key" placeholder="Paste your Gemini key" aria-label="Gemini API key" autocomplete="off">
         <button class="primary">Save</button>
@@ -747,6 +747,8 @@ $("key-form").onsubmit = (e) => {
   if (!probe?.ok) { // no server: static hosting, so run the backend in this tab
     local = await import("./local.js");
     $("local-setup").hidden = false;
+    if (local.AI_PROXY) $("key-help").textContent = "Runs in your browser: your notes stay on this device. AI works right away "
+      + "(a few free requests a day). Add your own free Gemini key for unlimited use; it is sent only to Google.";
     if (local.hasKey()) $("gemini-key").placeholder = "Key saved on this device";
   }
   loadCourses();
